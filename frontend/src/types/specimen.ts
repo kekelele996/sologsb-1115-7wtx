@@ -41,4 +41,8 @@ export interface Specimen {
   determiner: string
   siteId: string
   note: string
+  /** 首次登记时间（ISO）：合并两份离线台账时，分类与采集信息「先登记的那份」为准 */
+  createdAt?: string
+  /** 最近一次更新时间（ISO） */
+  updatedAt?: string
 }

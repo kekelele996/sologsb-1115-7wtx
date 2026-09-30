@@ -116,7 +116,8 @@ export default function CollectPage(): JSX.Element {
       status: '待鉴定',
       determiner: '',
       siteId: site.id,
-      note: draft.note.trim()
+      note: draft.note.trim(),
+      createdAt: new Date().toISOString()
     }))
     await specimenStore.getState().saveMany(rows)
     setJustCreated(rows)

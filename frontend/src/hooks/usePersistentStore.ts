@@ -100,6 +100,7 @@ export async function seedDemoData(): Promise<void> {
   if (count > 0) return
 
   const today = new Date().toISOString().slice(0, 10)
+  const seededAt = new Date().toISOString()
 
   await db.sites.bulkPut([
     {
@@ -151,7 +152,8 @@ export async function seedDemoData(): Promise<void> {
       status: '已鉴定',
       determiner: '覃羽',
       siteId: 'site_qlb',
-      note: '倒木下采集，鞘翅完整'
+      note: '倒木下采集，鞘翅完整',
+      createdAt: seededAt
     },
     {
       id: 'sp_002',
@@ -171,7 +173,8 @@ export async function seedDemoData(): Promise<void> {
       status: '初鉴',
       determiner: '覃羽',
       siteId: 'site_qlb',
-      note: '灯诱 20:30–22:00，翅面有磨损'
+      note: '灯诱 20:30–22:00，翅面有磨损',
+      createdAt: seededAt
     },
     {
       id: 'sp_003',
@@ -191,7 +194,8 @@ export async function seedDemoData(): Promise<void> {
       status: '待复核',
       determiner: '蓝澈',
       siteId: 'site_shr',
-      note: '与相近种混淆，需核对翅脉'
+      note: '与相近种混淆，需核对翅脉',
+      createdAt: seededAt
     },
     {
       id: 'sp_004',
@@ -211,7 +215,8 @@ export async function seedDemoData(): Promise<void> {
       status: '待鉴定',
       determiner: '',
       siteId: 'site_shr',
-      note: '酒精浸液保存，待制片'
+      note: '酒精浸液保存，待制片',
+      createdAt: seededAt
     }
   ])
 
