@@ -6,3 +6,15 @@ export { STORAGE_METHODS } from './storage'
 export type { Storage, StorageMethod } from './storage'
 export { CONFIDENCES } from './determination'
 export type { Determination, Confidence } from './determination'
+export { PACKET_KIND, PACKET_VERSION, SITE_FAR_THRESHOLD_METERS } from './merge'
+export type {
+  SquadPacket,
+  SiteChoice,
+  SitePlan,
+  FieldResolution,
+  SpecimenPlan,
+  DeterminationPlan,
+  StoragePlan,
+  MergePlan,
+  MergeStats
+} from './merge'

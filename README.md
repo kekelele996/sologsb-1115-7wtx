@@ -66,9 +66,9 @@ sologsb-1115/
 │       ├── stores/             # specimenStore / siteStore / storageStore / determinationStore（Zustand）
 │       ├── components/common/  # SpecimenCard / StatusTag / CabinetGrid / SitePicker
 │       ├── hooks/              # usePersistentStore / useSpecimenFilter
-│       ├── pages/              # SpecimensPage / SitesPage / CollectPage / DeterminationPage / StoragePage
+│       ├── pages/              # SpecimensPage / SitesPage / CollectPage / DeterminationPage / StoragePage / MergePage
 │       ├── router/index.tsx
-│       └── utils/              # codec.ts / export.ts / id.ts
+│       └── utils/              # codec.ts / export.ts / id.ts / merge.ts（并账引擎）/ squadPacket.ts（分队数据包）
 ```
 
 ## 五、数据模型与存储
@@ -82,6 +82,7 @@ sologsb-1115/
 
 - 数据库名 `gbinsectlog`，`meta` 表保存 `schemaVersion`；
 - `version(2)` 升级迁移会为历史标本补齐默认采集方式（扫网）；
+- `version(3)` 升级迁移为标本补齐 `registeredAt`（首次登记时间，用采集日期回填），供并账冲突判定先后；
 - 标本编号规则：`采集地代码-年份-流水号`（如 `QLB-2026-0007`），提交时自动分配并查重；
 - 数据仅存于浏览器本地，容器无状态、不挂载命名卷。
 
@@ -94,6 +95,7 @@ sologsb-1115/
 | `/sites` | 采集地管理：经纬度格式校验、各地采集次数统计、50 米内邻近采集地提示与一键合并 |
 | `/determination` | 鉴定工作流：待鉴定队列逐条处理，落鉴定记录并自动推进标本状态（已鉴定 / 待复核） |
 | `/storage` | 保藏柜位图：柜-抽屉-盒-位三级展开，空位/占用一目了然，拖拽入柜，重复占用给出占用提示 |
+| `/merge` | 台账并账：分队导出离线数据包，队长读入预检、裁决远距离采集地后整批合回主台账 |
 
 ## 七、业务约定
 
@@ -101,3 +103,17 @@ sologsb-1115/
 - 坐标 50 米内视为同一采集地，页面上给出合并提示，合并会把原采集地标本自动改挂；
 - 鉴定记录提交后自动把标本状态推进为「已鉴定」，勾选「需复核」则置为「待复核」；
 - 同一柜位（柜-屉-盒-位）只允许一份标本，冲突时列出已有标本编号。
+
+## 八、分队离线并账（`/merge`）
+
+分队各自离线登记，回营后把各自那份合回队里主台账，全流程不依赖网络：
+
+1. **导出数据包**：分队在并账页填写分队名称，导出包含四表全量快照的 `gbinsectlog-squad-packet` JSON；
+2. **队长预检**：读入数据包后逐表比对，不落库先出计划；
+3. **同编号标本两边都动过**：
+   - 目/科/属/种、暂定名、采集日期/采集人、性别虫态、体长、采集方式、数量、备注——**认先登记的一份**（按 `registeredAt`，并列主台账优先）；
+   - 鉴定状态、鉴定人、鉴定记录、保藏柜位属于鉴定/保藏结论，**主台账已有值时不被分队这份盖掉**，只在主台账空缺时补入；
+4. **采集地冲突**：采集地代码相同而坐标相差超过 50 米的，预检页把两份坐标并排列出，**由队长二选一**后才能提交；距离 ≤50 米视为同一采集地，标本自动挂到主台账那条；
+5. **整批提交**：四表在同一个 Dexie 事务内写入，任何一步失败**本批整体回滚**；此前已并好的其他批次不受影响，可原样重试；
+6. **幂等**：新记录使用「分队+编号」派生的确定性 ID、鉴定记录按业务键（标本+鉴定人+日期+结论）去重，同一份数据包重复并账不会多出条目；
+7. **柜位保护**：并入柜位前在事务内复查占用，目标柜位已被别的标本占用则该条跳过并在结果中列出编号；若提交瞬间发现新冲突则抛错回滚整批。

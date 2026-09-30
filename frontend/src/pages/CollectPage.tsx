@@ -101,6 +101,7 @@ export default function CollectPage(): JSX.Element {
     const rows: Specimen[] = drafts.map((draft) => ({
       id: uid('sp'),
       code: codes[draft.id],
+      registeredAt: new Date().toISOString(),
       order: draft.order.trim(),
       family: draft.family.trim(),
       genus: draft.genus.trim(),

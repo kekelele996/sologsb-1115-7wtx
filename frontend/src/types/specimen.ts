@@ -22,6 +22,8 @@ export interface Specimen {
   id: string
   /** 标本编号：采集地代码-年份-流水号 */
   code: string
+  /** 首次登记时间（ISO），并账时分类与采集信息认登记时间更早的一份 */
+  registeredAt: string
   order: string
   family: string
   genus: string

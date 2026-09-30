@@ -4,7 +4,7 @@ import Dexie, { type Table } from 'dexie'
 import type { CollectSite, Determination, Specimen, Storage } from '@/types'
 
 /** IndexedDB 数据结构版本号 */
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 
 export interface MetaRow {
   key: string
@@ -28,7 +28,7 @@ class InsectLogDb extends Dexie {
       determinations: 'id, specimenId, determiner',
       meta: 'key'
     })
-    // v2：新增「采集方式」字段，迁移时为历史标本补齐默认采集方式（扫网）
+    // v3：标本新增「首次登记时间」字段，迁移时用采集日期 + 编号顺序回填，保证并账冲突可判定先后
     this.version(SCHEMA_VERSION)
       .stores({
         specimens: 'id, code, order, family, status, siteId, collectDate',
@@ -44,6 +44,9 @@ class InsectLogDb extends Dexie {
           .modify((specimen) => {
             if (!specimen.method) {
               specimen.method = '扫网'
+            }
+            if (!specimen.registeredAt) {
+              specimen.registeredAt = `${specimen.collectDate}T00:00:00.000Z`
             }
           })
       })
@@ -136,6 +139,7 @@ export async function seedDemoData(): Promise<void> {
     {
       id: 'sp_001',
       code: 'QLB-2026-0001',
+      registeredAt: `${today}T08:12:00.000Z`,
       order: '鞘翅目',
       family: '步甲科',
       genus: 'Carabus',
@@ -156,6 +160,7 @@ export async function seedDemoData(): Promise<void> {
     {
       id: 'sp_002',
       code: 'QLB-2026-0002',
+      registeredAt: `${today}T08:20:00.000Z`,
       order: '鳞翅目',
       family: '夜蛾科',
       genus: '',
@@ -176,6 +181,7 @@ export async function seedDemoData(): Promise<void> {
     {
       id: 'sp_003',
       code: 'SHR-2026-0001',
+      registeredAt: `${today}T09:05:00.000Z`,
       order: '蜻蜓目',
       family: '蜻科',
       genus: 'Sympetrum',
@@ -196,6 +202,7 @@ export async function seedDemoData(): Promise<void> {
     {
       id: 'sp_004',
       code: 'SHR-2026-0002',
+      registeredAt: `${today}T09:18:00.000Z`,
       order: '双翅目',
       family: '摇蚊科',
       genus: '',
